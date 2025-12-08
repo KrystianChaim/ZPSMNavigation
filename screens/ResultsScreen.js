@@ -1,66 +1,52 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useEffect, useState } from 'react';
-import { getResults } from '../storage/resultsStorage';
+import { View, Text, StyleSheet, FlatList, RefreshControl } from "react-native";
+import { useState, useCallback, useEffect } from "react";
+import { getResults } from "../storage/resultsStorage";
 
 export default function ResultsScreen() {
-
   const [results, setResults] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function load() {
+    const data = await getResults();
+    setResults(data.reverse());
+  }
 
   useEffect(() => {
-    async function load() {
-      const data = await getResults();
-      setResults(data.reverse()); // najnowsze na górze
-    }
     load();
   }, []);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }, []);
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Wyniki graczy</Text>
 
-      {results.length === 0 && (
-        <Text style={styles.empty}>Brak wyników.</Text>
-      )}
-
-      {results.map((res, i) => (
-        <View key={i} style={styles.card}>
-          <Text style={styles.name}>{res.name}</Text>
-          <Text>Wynik: {res.score}/{res.total}</Text>
-          <Text>Data: {res.date}</Text>
-        </View>
-      ))}
-    </ScrollView>
+      <FlatList
+        data={results}
+        keyExtractor={(item, index) => index.toString()}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        renderItem={({ item }) => (
+          <View style={styles.card}>
+            <Text style={styles.name}>{item.nick}</Text>
+            <Text>Wynik: {item.score}/{item.total}</Text>
+            <Text>Typ: {item.type}</Text>
+            <Text>Data: {item.date}</Text>
+          </View>
+        )}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20
-  },
-
-  title: {
-    fontSize: 28,
-    fontWeight: '600',
-    marginBottom: 20,
-    textAlign: 'center'
-  },
-
-  empty: {
-    textAlign: 'center',
-    marginTop: 30,
-    color: '#555'
-  },
-
+  container: { flex: 1, padding: 20 },
+  title: { fontSize: 28, textAlign: "center", marginBottom: 20 },
   card: {
-    padding: 15,
-    borderWidth: 1,
-    marginBottom: 15,
-    borderRadius: 10
+    padding: 15, borderWidth: 1, marginBottom: 12, borderRadius: 10
   },
-
-  name: {
-    fontWeight: '700',
-    fontSize: 18,
-    marginBottom: 5
-  }
+  name: { fontSize: 18, fontWeight: "700", marginBottom: 5 }
 });
