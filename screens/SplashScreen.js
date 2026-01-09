@@ -5,7 +5,7 @@ export default function SplashScreen({ navigation }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace("Welcome");
-    }, 2000);
+    }, 2000); // splash trwa 2 sekundy
 
     return () => clearTimeout(timer);
   }, []);
@@ -13,7 +13,7 @@ export default function SplashScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../assets/splash.png")}   // ← lokalny plik
+        source={require("../assets/splash.png")}   // plik z SPLASHem
         style={styles.logo}
       />
     </View>
