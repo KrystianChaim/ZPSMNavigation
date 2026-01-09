@@ -1,40 +1,37 @@
+import React, { useState, useCallback } from "react";
 import { View, Text, StyleSheet, FlatList, RefreshControl } from "react-native";
-import { useState, useCallback, useEffect } from "react";
-import { getResults } from "../storage/resultsStorage";
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ResultsScreen() {
   const [results, setResults] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  async function load() {
-    const data = await getResults();
-    setResults(data.reverse());
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  const onRefresh = useCallback(async () => {
+  const load = async () => {
     setRefreshing(true);
-    await load();
+    try {
+      const res = await fetch("https://tgryl.pl/quiz/results?last=20");
+      const data = await res.json();
+      setResults(data);
+    } catch (e) { console.error(e); }
     setRefreshing(false);
-  }, []);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Wyniki graczy</Text>
-
       <FlatList
         data={results}
-        keyExtractor={(item, index) => index.toString()}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.name}>{item.nick}</Text>
-            <Text>Wynik: {item.score}/{item.total}</Text>
-            <Text>Typ: {item.type}</Text>
-            <Text>Data: {item.date}</Text>
+            <Text style={styles.nick}>{item.nick}</Text>
+            <Text style={styles.info}>Wynik: {item.score}/{item.total} | {item.type}</Text>
+            <Text style={styles.date}>{item.date}</Text>
           </View>
         )}
       />
@@ -43,10 +40,9 @@ export default function ResultsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 28, textAlign: "center", marginBottom: 20 },
-  card: {
-    padding: 15, borderWidth: 1, marginBottom: 12, borderRadius: 10
-  },
-  name: { fontSize: 18, fontWeight: "700", marginBottom: 5 }
+  container: { flex: 1, padding: 10 },
+  card: { padding: 15, backgroundColor: 'white', marginBottom: 8, borderRadius: 5 },
+  nick: { fontFamily: 'Montserrat_700Bold', fontSize: 16 },
+  info: { fontFamily: 'Roboto_400Regular', fontSize: 14 },
+  date: { fontSize: 10, color: '#aaa' }
 });
