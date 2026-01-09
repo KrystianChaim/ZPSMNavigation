@@ -7,6 +7,7 @@ export default function WelcomeScreen({ navigation }) {
 
   useEffect(() => {
     async function checkFirstRun() {
+      // Sprawdź czy zaakceptowano regulamin
       const hasSeen = await AsyncStorage.getItem("SEEN_RULES");
 
       if (hasSeen) {
@@ -24,7 +25,7 @@ export default function WelcomeScreen({ navigation }) {
   }
 
   if (loading) return <View style={{ flex: 1, backgroundColor: "#fff" }} />;
-
+  // Regulamin
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Regulamin Quizu</Text>
